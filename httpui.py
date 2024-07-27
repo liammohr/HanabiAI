@@ -582,7 +582,7 @@ class MyHandler(http.server.BaseHTTPRequestHandler):
                     del participants[d]
                     del participantstarts[d]
             except Exception:
-                errlog.write("Error cleaning participants:\n".encode())
+                errlog.write("Error cleaning participants:\n")
                 errlog.write(traceback.format_exc())
             participants[gid] = open("log/survey%s.log"%gid, "w")
             participantstarts[gid] = time.time()
@@ -865,20 +865,20 @@ class MyHandler(http.server.BaseHTTPRequestHandler):
             s.wfile.write('<p>AI: '.encode())
             
             for i,(display,value) in enumerate([("Outer State AI", "outer"), ("Intentional AI", "intentional"), ("Full AI", "full")]):
-                s.wfile.write(' <a href="/selectreplay/%s">%s</a> - '%(format_filters(update_filters(filters, "ai", value)), display).encode())
-            s.wfile.write(' <a href="/selectreplay/%s">any</a></p>'%(format_filters(update_filters(filters, "ai", ""))).encode())
+                s.wfile.write((' <a href="/selectreplay/%s">%s</a> - '%(format_filters(update_filters(filters, "ai", value)), display)).encode())
+            s.wfile.write((' <a href="/selectreplay/%s">any</a></p>'%(format_filters(update_filters(filters, "ai", "")))).encode())
             
             s.wfile.write('<p>Score: '.encode())
             
             for i,(display,value) in enumerate([("0-4", "0"), ("5-9", "1"), ("10-14", "2"), ("15-19", "3"), ("20-24", "4"), ("25", "5")]):
-                s.wfile.write(' <a href="/selectreplay/%s">%s</a> - '%(format_filters(update_filters(filters, "score", value)), display).encode())
-            s.wfile.write(' <a href="/selectreplay/%s">any</a></p>'%(format_filters(update_filters(filters, "score", ""))).encode())
+                s.wfile.write((' <a href="/selectreplay/%s">%s</a> - '%(format_filters(update_filters(filters, "score", value)), display)).encode())
+            s.wfile.write((' <a href="/selectreplay/%s">any</a></p>'%(format_filters(update_filters(filters, "score", "")))).encode())
             
             s.wfile.write('<p>Deck: '.encode())
             
             for i,(display,value) in enumerate([("1", "1"), ("2", "2"), ("3", "3"), ("4", "4"), ("5", "5"), ("other", "other")]):
-                s.wfile.write(' <a href="/selectreplay/%s">%s</a> - '%(format_filters(update_filters(filters, "deck", value)), display).encode())
-            s.wfile.write(' <a href="/selectreplay/%s">any</a></p>'%(format_filters(update_filters(filters, "deck", ""))).encode())
+                s.wfile.write((' <a href="/selectreplay/%s">%s</a> - '%(format_filters(update_filters(filters, "deck", value)), display)).encode())
+            s.wfile.write((' <a href="/selectreplay/%s">any</a></p>'%(format_filters(update_filters(filters, "deck", "")))).encode())
             
             s.wfile.write('Select a replay to view:<br/><ul>'.encode())
             replays = []
@@ -1008,7 +1008,7 @@ class MyHandler(http.server.BaseHTTPRequestHandler):
        
         s.wfile.write("</body></html>".encode())
         if game.done() and gid is not None and gid in games:
-            errlog.write("%s game done. Score: %d\n"%(str(game.treatment), game.score()).encode())
+            errlog.write("%s game done. Score: %d\n"%(str(game.treatment), game.score()))
             errlog.flush()
             game.finish()
             del[gid]
@@ -1022,7 +1022,7 @@ class MyHandler(http.server.BaseHTTPRequestHandler):
         for line in game.players[0].get_explanation():
             s.wfile.write('<tr>\n'.encode())
             for item in line:
-                s.wfile.write('\t<td>%s</td>\n'%(str(item).replace("\n", "<br/>")).encode())
+                s.wfile.write(('\t<td>%s</td>\n'%(str(item).replace("\n", "<br/>"))).encode())
             s.wfile.write('</tr>\n'.encode())
         s.wfile.write("</table>\n".encode())
        
@@ -1032,19 +1032,19 @@ class MyHandler(http.server.BaseHTTPRequestHandler):
     def add_choice(s, name, question, answers, default=-1):
         s.wfile.write("<p>".encode())
         s.wfile.write((question + "<br/>").encode())
-        s.wfile.write('<fieldset id="%s">\n'%name.encode())
+        s.wfile.write(('<fieldset id="%s">\n'%name).encode())
         for i,(aname,text) in enumerate(answers):
              if i == default:
-                 s.wfile.write('<input name="%s" type="radio" value="%s" id="%s%s" checked="checked"/><label for="%s%s">%s</label><br/>\n'%(name,aname,name,aname, name,aname,text).encode())
+                 s.wfile.write(('<input name="%s" type="radio" value="%s" id="%s%s" checked="checked"/><label for="%s%s">%s</label><br/>\n'%(name,aname,name,aname, name,aname,text)).encode())
              else:
-                 s.wfile.write('<input name="%s" type="radio" value="%s" id="%s%s"/><label for="%s%s">%s</label><br/>\n'%(name,aname,name,aname,name,aname,text).encode())
+                 s.wfile.write(('<input name="%s" type="radio" value="%s" id="%s%s"/><label for="%s%s">%s</label><br/>\n'%(name,aname,name,aname,name,aname,text)).encode())
         s.wfile.write("</fieldset>\n".encode())
         s.wfile.write("</p>".encode())
         
     def add_question(s, name, question):
         s.wfile.write("<p>".encode())
         s.wfile.write((question + "<br/>").encode())
-        s.wfile.write('<input name="%s"/>\n'%name.encode())
+        s.wfile.write(('<input name="%s"/>\n'%name).encode())
         s.wfile.write("</p>".encode())
         
     def presurvey(s, gid, warn=False):
@@ -1053,7 +1053,7 @@ class MyHandler(http.server.BaseHTTPRequestHandler):
         s.wfile.write('<form action="/submitpost2" method="POST">'.encode())
         s.presurvey_questions()
         s.wfile.write("<p>".encode())
-        s.wfile.write('<input name="gid" type="hidden" value="%s"/>\n'%gid.encode())
+        s.wfile.write(('<input name="gid" type="hidden" value="%s"/>\n'%gid).encode())
         s.wfile.write('<input type="submit" value="Finish"/>\n'.encode())
         s.wfile.write('</form></td></tr></table></center>'.encode())
         
@@ -1122,7 +1122,7 @@ class MyHandler(http.server.BaseHTTPRequestHandler):
         s.wfile.write('<form action="/submitpost" method="POST">'.encode())
         s.postsurvey_questions()
         s.wfile.write("<p>".encode())
-        s.wfile.write('<input name="gid" type="hidden" value="%s"/>\n'%gid.encode())
+        s.wfile.write(('<input name="gid" type="hidden" value="%s"/>\n'%gid).encode())
         s.wfile.write('<input type="submit" value="Continue"/>\n'.encode())
         s.wfile.write('</form></td></tr></table></center>'.encode())
     
