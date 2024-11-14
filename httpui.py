@@ -494,7 +494,7 @@ def format_score(sc):
     
                 
 # AIClasses
-ais = {"random": hanabi.Player, "inner": hanabi.InnerStatePlayer, "outer": hanabi.OuterStatePlayer, "self": hanabi.SelfRecognitionPlayer, "intentional": hanabi.IntentionalPlayer, "full": hanabi.SelfIntentionalPlayer}
+ais = {"random": hanabi.Player, "fixed": hanabi.FixedPlayer,"inner": hanabi.InnerStatePlayer, "outer": hanabi.OuterStatePlayer, "self": hanabi.SelfRecognitionPlayer, "intentional": hanabi.IntentionalPlayer, "full": hanabi.SelfIntentionalPlayer}
 
 class MyHandler(http.server.BaseHTTPRequestHandler):
     def do_HEAD(s):
@@ -955,6 +955,7 @@ class MyHandler(http.server.BaseHTTPRequestHandler):
             s.wfile.write("<html><head><title>Hanabi</title></head>\n".encode())
             s.wfile.write('<body><h1>Welcome to Hanabi</h1> <p>To start, choose an AI:</p>\n'.encode())
             s.wfile.write('<ul><li><a href="/new/random">Random</a></li>\n'.encode())
+            s.wfile.write('<li><a href="/new/fixed">Fixed</a></li>\n'.encode())
             s.wfile.write('<li><a href="/new/inner">Inner State</a></li>\n'.encode())
             s.wfile.write('<li><a href="/new/outer">Outer State</a></li>\n'.encode())
             s.wfile.write('<li><a href="/new/self">Self Recognition</a></li>\n'.encode())
