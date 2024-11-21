@@ -38,7 +38,7 @@ class RISMCTS:
             player = self.root.state.root
             self.root.state.redeterminize_hand(player,bypass=True)
             node = self.root
-            while node.is_fully_expanded():
+            while node.is_fully_expanded() and not node.leaf:
                 new_node = node.select_child()
                 self.exit_node(node, player)
                 player = new_node.player
@@ -67,11 +67,10 @@ class RISMCTS:
             node.state.restore_hand(player, self.saved_hand, self.root.state.root)
 
     def expand(self, node:HanabiNode):
-
+        if node.state.game_ended()[0]:
+            return node
         actions = node.get_legal_actions()
-        action = random.choice(actions)
         children = [c.action for c in node.children]
-        while action in children:
-            action = random.choice(actions)
-        return node.expand(action)
+
+        return node.expand(random.choice([ac for ac in actions if ac not in children]))
 

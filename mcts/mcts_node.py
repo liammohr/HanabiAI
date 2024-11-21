@@ -6,6 +6,7 @@ import random
 import numpy as np
 
 from game_state import Action, MAX_HINTS, GameState
+from rules import Rules
 
 
 class MCTSNode:
@@ -31,7 +32,7 @@ class MCTSNode:
         self.children: List[MCTSNode] = []
         self.visits = 0
         self.value = 0.0
-        self.num_children = None
+        self.leaf = False
 
     def backpropagate(self, reward: float) -> None:
         """
@@ -59,7 +60,9 @@ class MCTSNode:
             return (node.value / node.visits) + 0.3 * math.sqrt(
                 math.log(self.visits) / node.visits
             )
-
+        if len(self.children) == 0:
+            self.leaf = True
+            return self
         return max(self.children, key=ucb1)
 
     def is_fully_expanded(self) -> bool:
@@ -99,6 +102,7 @@ class HanabiNode(MCTSNode):
 
         return len(self.children) >= len(self.get_legal_actions())
 
+
     def get_legal_actions(self, state: GameState = None, player=None) -> List[Action]:
         """
         Get all possible legal actions in the current game state.
@@ -108,45 +112,10 @@ class HanabiNode(MCTSNode):
         """
         if state is None:
             state = self.state
-
-        if player is None:
-            player = state.player
-        legal_actions = []
-        play = []
-        # Add play and discard actions for all cards in all players' hands
-        for card_idx, card in enumerate(state.hands[player]):
-            if (
-                    card.is_fully_determined()
-                    and state.board[card.color] == card.rank - 1  # playable
-            ) or (card.rank_known and np.all(state.board[np.where(card.color_options == 1)] == card.rank - 1))\
-                    :
-                # legal_actions.append(Action(action_type="play", player=player, card_idx=card_idx))
-                play.append(Action(action_type="play", player=player, card_idx=card_idx))
-            if (
-                self.state.errors < 2
-                and card.rank_known
-                and not card.color_known
-                and np.any(self.state.board == card.rank - 1)
-            ):
-                legal_actions.append(Action(action_type="play", player=player, card_idx=card_idx))
-
-
-            legal_actions.append(Action(action_type="discard", player=player, card_idx=card_idx))
-
-        if len(play)>0:
-            return play
-        # Add hint actions if there are hints available
-        if state.hints < MAX_HINTS:
-            for destination_idx in range(len(state.hands)):
-                if destination_idx != player:
-                    for color in range(len(state.board)):  # Hint by color
-                        legal_actions.append(Action(action_type="hint", player=player,
-                                                    destination=destination_idx, hint_type="color", hint_value=color))
-                    for rank in range(1, 6):  # Hint by rank
-                        legal_actions.append(Action(action_type="hint", player=player,
-                                                    destination=destination_idx, hint_type="value", hint_value=rank))
-
-        return legal_actions
+        actions = Rules.get_rules_moves(state,state.player)
+        if len(actions) == 0:
+            actions = [Action(action_type="discard", player=state.player, card_idx=0)]
+        return actions
 
     def expand(self, action: Action) -> "HanabiNode":
         """
@@ -182,50 +151,51 @@ class HanabiNode(MCTSNode):
         Returns:
             Action: A randomly selected legal action.
         """
-        if state is None:
-            state = self.state
-        if player is None:
-            player = self.player
-
-        # Cache state variables to reduce repeated access
-        board = state.board
-        hands = state.hands[player]
-        hints = state.hints
-        plays = []
-
-        # Check for a playable action
-        for card_idx, card in enumerate(hands):
-            if (card.is_fully_determined() and board[card.color] == card.rank - 1) or (card.rank_known and np.all(state.board[np.where(card.color_options == 1)] == card.rank - 1)) :
-                return Action(action_type="play", player=player, card_idx=card_idx)
-            elif ( self.state.errors < 3
-                and card.rank_known
-                and not card.color_known
-                and np.any(self.state.board == card.rank - 1)
-            ):
-                plays.append( Action(action_type="play", player=player, card_idx=card_idx))
-
-        if random.random()<0.3 and len(plays)>0:
-            return random.choice(plays)
-        # Randomly decide between discard or hint actions
-        if random.random() < 0.5:  # 50% chance to discard
-            card_idx = random.randint(0, len(hands) - 1)
-            return Action(action_type="discard", player=player, card_idx=card_idx)
-
-        # If hints are available, generate a random hint
-        if hints < MAX_HINTS:
-            destination = random.choice([idx for idx in range(len(state.hands)) if idx != player])
-            if random.random() < 0.5:  # 50% chance to hint by color
-                hint_value = random.randint(0, len(board) - 1)  # Random color
-                return Action(action_type="hint", player=player, destination=destination, hint_type="color",
-                              hint_value=hint_value)
-            else:  # Hint by rank
-                hint_value = random.randint(1, 5)  # Random rank
-                return Action(action_type="hint", player=player, destination=destination, hint_type="value",
-                              hint_value=hint_value)
-
-        # Default to discard if no hints are available
-        card_idx = random.randint(0, len(hands) - 1)
-        return Action(action_type="discard", player=player, card_idx=card_idx)
+        return random.choice(self.get_legal_actions(state, player))
+        # if state is None:
+        #     state = self.state
+        # if player is None:
+        #     player = self.player
+        #
+        # # Cache state variables to reduce repeated access
+        # board = state.board
+        # hands = state.hands[player]
+        # hints = state.hints
+        # plays = []
+        #
+        # # Check for a playable action
+        # for card_idx, card in enumerate(hands):
+        #     if (card.is_fully_determined() and board[card.color] == card.rank - 1) or (card.rank_known and np.all(state.board[np.where(card.color_options == 1)] == card.rank - 1)) :
+        #         return Action(action_type="play", player=player, card_idx=card_idx)
+        #     elif ( self.state.errors < 3
+        #         and card.rank_known
+        #         and not card.color_known
+        #         and np.any(self.state.board == card.rank - 1)
+        #     ):
+        #         plays.append( Action(action_type="play", player=player, card_idx=card_idx))
+        #
+        # if random.random()<0.3 and len(plays)>0:
+        #     return random.choice(plays)
+        # # Randomly decide between discard or hint actions
+        # if random.random() < 0.5:  # 50% chance to discard
+        #     card_idx = random.randint(0, len(hands) - 1)
+        #     return Action(action_type="discard", player=player, card_idx=card_idx)
+        #
+        # # If hints are available, generate a random hint
+        # if hints < MAX_HINTS:
+        #     destination = random.choice([idx for idx in range(len(state.hands)) if idx != player])
+        #     if random.random() < 0.5:  # 50% chance to hint by color
+        #         hint_value = random.randint(0, len(board) - 1)  # Random color
+        #         return Action(action_type="hint", player=player, destination=destination, hint_type="color",
+        #                       hint_value=hint_value)
+        #     else:  # Hint by rank
+        #         hint_value = random.randint(1, 5)  # Random rank
+        #         return Action(action_type="hint", player=player, destination=destination, hint_type="value",
+        #                       hint_value=hint_value)
+        #
+        # # Default to discard if no hints are available
+        # card_idx = random.randint(0, len(hands) - 1)
+        # return Action(action_type="discard", player=player, card_idx=card_idx)
 
     def rollout(self) -> float:
         """

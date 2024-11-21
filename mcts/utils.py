@@ -65,6 +65,62 @@ class Card:
 
         return result
 
+    def is_probably_playable(self, confidence_threshold: float, board: np.ndarray) -> bool:
+        """
+        Determine if the card is probably playable with a given confidence threshold.
+
+        Args:
+            confidence_threshold (float): The minimum probability to consider the card playable.
+            board (np.ndarray): The current board state (array of highest playable rank for each color).
+
+        Returns:
+            bool: True if the card is probably playable with the confidence threshold, False otherwise.
+        """
+        # Get indices of valid colors and ranks
+        valid_colors = np.flatnonzero(self.color_options)
+        valid_ranks = np.flatnonzero(self.number_options)
+
+        # Count valid possibilities
+        total_possibilities = len(valid_colors) * len(valid_ranks)
+
+        if total_possibilities == 0:
+            return False  # No valid possibilities
+
+        # Count playable possibilities
+        total_prob = sum(1 for color in valid_colors for rank in valid_ranks if board[color] == rank-1)
+
+        # Calculate and compare probability
+        playability_prob = total_prob / total_possibilities
+        return playability_prob >= confidence_threshold
+
+    def dispense_probability(self, board: np.ndarray):
+        """
+        Determine if the card is probably playable with a given confidence threshold.
+
+        Args:
+            confidence_threshold (float): The minimum probability to consider the card playable.
+            board (np.ndarray): The current board state (array of highest playable rank for each color).
+
+        Returns:
+            bool: True if the card is probably playable with the confidence threshold, False otherwise.
+        """
+        # Get indices of valid colors and ranks
+        valid_colors = np.flatnonzero(self.color_options)
+        valid_ranks = np.flatnonzero(self.number_options)
+
+        # Count valid possibilities
+        total_possibilities = len(valid_colors) * len(valid_ranks)
+
+        if total_possibilities == 0:
+            return False  # No valid possibilities
+
+        # Count playable possibilities
+        total_prob = sum(1 for color in valid_colors for rank in valid_ranks if board[color] >= rank)
+
+        # Calculate and compare probability
+        playability_prob = total_prob / total_possibilities
+        return playability_prob
+
     def reveal_rank(self, rank=None) -> None:
         if rank is not None:
             if self.rank is not None and self.rank != rank:

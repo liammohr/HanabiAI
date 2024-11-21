@@ -208,6 +208,12 @@ class GameState:
         result.player = self.player
         return result
 
+    def available_hints(self):
+        MAX_HINTS - self.hints
+
+    def get_next_player(self, destination):
+        return (destination+1)%len(self.hands)
+
 
 class Action:
     """
@@ -245,4 +251,13 @@ class Action:
     def __eq__(self, other):
         if not isinstance(other, Action):
             return False
-        return self.action_type == other.action_type and self.player == other.player and self.card_idx == other.card_idx and self.destination == other.destination and self.hint_type == other.hint_type and self.hint_value == other.hint_value
+        return (self.action_type == other.action_type and
+                self.player == other.player and
+                self.destination == other.destination and
+                self.hint_type == other.hint_type and
+                self.hint_value == other.hint_value and
+                self.card_idx == other.card_idx)
+
+    def __hash__(self):
+        return hash((self.action_type, self.player, self.destination,
+                     self.hint_type, self.hint_value, self.card_idx))
