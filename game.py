@@ -46,7 +46,7 @@ def discardable(possible, board):
 
 
 class Game:
-    def __init__(self, players, log=sys.stdout, format=0):
+    def __init__(self, players = 2, log=sys.stdout, format=0):
         self.players = players
         self.hits = 3
         self.hints = 8
