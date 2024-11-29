@@ -54,11 +54,11 @@ class GameState:
             assert self.hands[player][-1] is not None
         else:
             self.last_turn_played[player] = True
-        if self.board[card.color] == card.rank - 1:
+        if card is not None and self.board[card.color] == card.rank - 1:
             self.board[card.color] += 1
             if card.rank == 5 and self.hints > 0:
                 self.hints -= 1
-        else:
+        elif card is not None:
             self.trash.append(card)
             self.errors += 1
         self.player = (self.player + 1) % len(self.hands)
@@ -94,10 +94,11 @@ class GameState:
         #     raise RuntimeError("Maximum number of hints already reached")
         hand = self.hands[destination]
         for card in hand:
-            if hint_type == "value":
-                card.reveal_rank(hint_value)
-            elif hint_type == "color":
-                card.reveal_color(hint_value)
+            if card is not None:
+                if hint_type == "value":
+                    card.reveal_rank(hint_value)
+                elif hint_type == "color":
+                    card.reveal_color(hint_value)
         if len(self.deck) <= 0:
             self.last_turn_played[:] = True
         self.hints = min(self.hints + 1, MAX_HINTS)
@@ -111,6 +112,7 @@ class GameState:
             player: the name of the player
         """
         hand = self.hands[player]
+        new_card = None
         if player == self.root and not bypass:
             return
         self.deck.add_cards(hand, ignore_fd=True)
@@ -121,23 +123,25 @@ class GameState:
 
             new_hand = []
             for idx, card in enumerate(hand):
-                if card.is_fully_determined():
+                if card is not None and card.is_fully_determined():
                     new_hand.append(card)
                 else:
-                    rank = card.rank if card.rank_known else None
-                    color = card.color if card.color_known else None
-                    new_card = self.deck.draw(rank=rank, color=color, color_options=card.color_options, number_options=card.number_options)
-                    if new_card is None:
-                        self.deck.reset_reservations()
-                        self.deck.add_cards(new_hand, ignore_fd=True)
-                        success = False
-                        break
-                    assert new_card.rank_known == card.rank_known
-                    assert new_card.color_known == card.color_known
+                    if card is not None:
+                        rank = card.rank if card.rank_known else None
+                        color = card.color if card.color_known else None
+                        new_card = self.deck.draw(rank=rank, color=color, color_options=card.color_options, number_options=card.number_options)
+                        if new_card is None:
+                            self.deck.reset_reservations()
+                            self.deck.add_cards(new_hand, ignore_fd=True)
+                            success = False
+                            break
+                        assert new_card.rank_known == card.rank_known
+                        assert new_card.color_known == card.color_known
 
                     # new_card.number_options = card.number_options
                     # new_card.color_options = card.color_options
-                    new_hand.append(new_card)
+                    if new_card:
+                        new_hand.append(new_card)
 
             self.deck.assert_no_reserved_cards()
             self.hands[player] = new_hand
@@ -153,11 +157,12 @@ class GameState:
 
         for idx in range(len(cards)):
             card = cards[idx]
-            if self.deck[card.rank, card.color] > 0:
-                self.deck.remove_cards([card])
-            else:
-                cards[idx] = self.deck.draw()
-                assert cards[idx] is not None
+            if card is not None:
+                if self.deck[card.rank, card.color] > 0:
+                    self.deck.remove_cards([card])
+                else:
+                    cards[idx] = self.deck.draw()
+                    assert cards[idx] is not None
 
     def restore_hand(self, player: int, saved_hand: List[Card], root: int) -> None:
         """
@@ -209,7 +214,7 @@ class GameState:
         return result
 
     def available_hints(self):
-        MAX_HINTS - self.hints
+        return MAX_HINTS - self.hints
 
     def get_next_player(self, destination):
         return (destination+1)%len(self.hands)
