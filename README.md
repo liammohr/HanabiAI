@@ -13,8 +13,8 @@ Use the README inside the folder for running the code.
 
 ## MCTS
 This foldoer contains our RIS-MCTS implementation. In order to run the code, you can either run the `mcts_main.py` file, or the `run.bat` file to simulate many runs.
-In order to change turn time, do it in the main call in the main file. we started with the game state from this 
-[library](https://github.com/git-pushz/hanabi-mcts) and than changed it and modified it to our implementation of 
+In order to change turn time, do it in the main call in the main file. We started with the game state from this 
+[library](https://github.com/git-pushz/hanabi-mcts) and then changed and modified it to our implementation of 
 RIS-MCTS
 
 ## Learner
