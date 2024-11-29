@@ -219,11 +219,12 @@ class FixedPlayer(Player):
         
         discards = []
         for i,p in enumerate(possible):
+            # Play a card if it is known to be playable
             if playable(p,board):
                 return Action(PLAY, cnr=i)
             if discardable(p,board):
                 discards.append(i)
-
+        # Discard a random discardeble card (if there is one)
         if discards:
             return Action(DISCARD, cnr=random.choice(discards))
             
@@ -234,6 +235,7 @@ class FixedPlayer(Player):
                     if board[col][1] + 1 == n:
                         playables.append((i,j))
         
+        # Hint about a playable card, if one exists
         if playables and hints > 0:
             i,j = playables[0]
             if random.random() < 0.5:
