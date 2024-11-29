@@ -157,7 +157,7 @@ class Card:
 
 
 CARD_QUANTITIES = [3, 2, 2, 2, 1]
-
+    
 
 class Deck:
     def __init__(self) -> None:
@@ -183,7 +183,7 @@ class Deck:
     def reserve_semi_determined_cards(self, cards: List[Card]) -> None:
         self.assert_no_reserved_cards()
         for card in cards:
-            if not card.is_fully_determined():
+            if (card is not None) and (not card.is_fully_determined()):
                 if card.rank_known:
                     self._reserved_ranks[card.rank - 1] += 1
                 elif card.color_known:
@@ -224,11 +224,12 @@ class Deck:
 
     def remove_cards(self, cards: List[Card]) -> None:
         for card in cards:
-            self._decrement(card.rank, card.color)
+            if card is not None:
+                self._decrement(card.rank, card.color)
 
     def add_cards(self, cards: List[Card], ignore_fd: bool = False) -> None:
         for card in cards:
-            if not (ignore_fd and card.is_fully_determined()):
+            if card is not None and (not (ignore_fd and card.is_fully_determined())):
                 self._increment(card.rank, card.color)
 
     def draw(
@@ -383,8 +384,9 @@ class Trash:
             self.maxima[color] = min(rank - 1, self.maxima[color])
 
     def append(self, card: Card) -> None:
-        self.list.append(card)
-        self._decrement(card.rank, card.color)
+        if card is not None:
+            self.list.append(card)
+            self._decrement(card.rank, card.color)
 
     def get_table(self) -> np.ndarray:
         return self._table

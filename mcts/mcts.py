@@ -48,7 +48,7 @@ class RISMCTS:
             score = node.rollout()
             node.backpropagate(score)
         best = self.root.select_child()
-        print(self.root.visits)
+        # print(self.root.visits)
         return best.action
 
 

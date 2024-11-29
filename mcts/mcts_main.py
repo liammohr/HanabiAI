@@ -2,7 +2,6 @@ from game_state import GameState
 from mcts import RISMCTS
 from mcts_node import HanabiNode
 
-
 def run_game(time_limit):
     game = GameState(0)
     player = 0
@@ -21,7 +20,7 @@ def run_game(time_limit):
         print(game.board)
         print(game.hands)
         player = (player + 1) % 2
-    print(game.game_ended())
+    print(game.game_ended()[1], end = "")
 
 
 if __name__ == '__main__':

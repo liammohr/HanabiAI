@@ -90,7 +90,9 @@ class Rules:
             board: the game board of played cards
             trash: unused argument, needed for the signature of the method
         """
-        return board[card.color] == card.rank - 1
+        if card is not None:
+            return board[card.color] == card.rank - 1
+        return False
 
     @staticmethod
     def _is_discardable(card: Card, board: np.ndarray, trash: Trash) -> bool:
@@ -102,7 +104,9 @@ class Rules:
             board: the game board of played cards
             trash: the trash of the game
         """
-        return board[card.color] >= card.rank or trash.maxima[card.color] < card.rank
+        if card is not None:
+            return board[card.color] >= card.rank or trash.maxima[card.color] < card.rank
+        return False
 
     @staticmethod
     def _is_unplayable(card: Card, board: np.ndarray, trash: Trash) -> bool:
@@ -129,7 +133,9 @@ class Rules:
             board: unused argument, needed for the signature of the method
             trash: the trash of the game
         """
-        return trash[int(card.rank), card.color] > 1
+        if card is not None:
+            return trash[int(card.rank), card.color] > 1
+        return True
 
     @staticmethod
     def _is_risky(card: Card, board: np.ndarray, trash: Trash) -> bool:
@@ -141,7 +147,9 @@ class Rules:
             board: unused argument, needed for the signature of the method
             trash: the trash of the game
         """
-        return trash[int(card.rank), card.color] == 1
+        if card is not None:
+            return trash[int(card.rank), card.color] == 1
+        return False
 
     @staticmethod
     def _get_probabilities(
@@ -163,14 +171,15 @@ class Rules:
 
         for idx, card in enumerate(hand):
             possibilities = np.copy(Rules._mental_state[:, :])
-            if card.rank_known:
-                mask = np.full(5, True)
-                mask[card.rank - 1] = False
-                possibilities[mask, :] = 0
-            if card.color_known:
-                mask = np.full(5, True)
-                mask[card.color] = False
-                possibilities[:, mask] = 0
+            if card is not None:
+                if card.rank_known:
+                    mask = np.full(5, True)
+                    mask[card.rank - 1] = False
+                    possibilities[mask, :] = 0
+                if card.color_known:
+                    mask = np.full(5, True)
+                    mask[card.color] = False
+                    possibilities[:, mask] = 0
 
             number_of_determinizations = np.sum(possibilities)
             assert number_of_determinizations > 0
@@ -208,7 +217,7 @@ class Rules:
             for rank in range(1, 6):
                 total_affected = 0
                 for card in hand:
-                    if not new_information or not card.rank_known:
+                    if card is not None and (not new_information or not card.rank_known):
                         if card.rank == rank:
                             total_affected += 1
 
@@ -227,7 +236,7 @@ class Rules:
             for color in range(len(Color)):
                 total_affected = 0
                 for card in hand:
-                    if not new_information or not card.color_known:
+                    if card is not None and (not new_information or not card.color_known):
                         if card.color == color:
                             total_affected += 1
 
@@ -268,23 +277,24 @@ class Rules:
             if destination == Rules._player:
                 return None
             for idx, card in enumerate(Rules._state.hands[destination]):
-                if (
-                    fn_condition(card, Rules._state.board, Rules._state.trash)
-                    and not card.is_fully_determined()
-                ):
-                    if not card.rank_known:
-                        hint_type = "value"
-                        hint_value = card.rank
-                    else:
-                        hint_type = "color"
-                        hint_value = card.color
-                    return Action(
-                        player=Rules._player,
-                        action_type=action_type,
-                        destination=destination,
-                        hint_type=hint_type,
-                        hint_value=hint_value,
-                    )
+                if card is not None:
+                    if (
+                        fn_condition(card, Rules._state.board, Rules._state.trash)
+                        and not card.is_fully_determined()
+                    ):
+                        if not card.rank_known:
+                            hint_type = "value"
+                            hint_value = card.rank
+                        else:
+                            hint_type = "color"
+                            hint_value = card.color
+                        return Action(
+                            player=Rules._player,
+                            action_type=action_type,
+                            destination=destination,
+                            hint_type=hint_type,
+                            hint_value=hint_value,
+                        )
 
     # RULES 4, 5 and 6
     @staticmethod
@@ -308,7 +318,7 @@ class Rules:
             if destination == Rules._player:
                 return None
             for card in Rules._state.hands[destination]:
-                if card.is_semi_determined() and fn_condition(
+                if card is not None and card.is_semi_determined() and fn_condition(
                     card, Rules._state.board, Rules._state.trash
                 ):
                     if not card.rank_known:
@@ -409,7 +419,7 @@ class Rules:
                 best_idx = 0
             else:
                 best_idx = next(
-                    (idx for idx, card in enumerate(hand) if not card.rank_known), 0
+                    (idx for idx, card in enumerate(hand) if card is not None and not card.rank_known), 0
                 )
         else:
             # if only 1 or none used hints, prefer a hint over a discard
